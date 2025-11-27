@@ -1,25 +1,25 @@
 # main.py
 import streamlit as st
 from langchain_core.messages import HumanMessage, AIMessage
-import time  # Thêm để mô phỏng loading time hoặc các animations nhỏ
+import time  # Added to measure response time and support small loading animations
 
-# Import create_multi_agent_workflow từ file langgraph_workflow.py
+# Import create_multi_agent_workflow from langgraph_workflow.py
 from langgraph_workflow import create_multi_agent_workflow
 
-# Sử dụng st.cache_resource để khởi tạo LangGraph app một lần duy nhất.
-# Điều này rất quan trọng để tránh khởi tạo lại các model và vectorstore trên mỗi lần rerun của Streamlit.
+# Use st.cache_resource so the LangGraph app is initialized only once.
+# This avoids re-initializing models and vector stores on every Streamlit rerun.
 @st.cache_resource
 def get_langgraph_app():
     return create_multi_agent_workflow()
 
 app = get_langgraph_app()
 
-# Cấu hình trang Streamlit
+# Configure the Streamlit page
 st.set_page_config(page_title="Multi-Agent Insurance Assistant", page_icon="🤖", layout="wide")
 st.title("🤖 Multi-Agent Insurance Assistant")
 st.caption("Powered by LangChain 1.0.5 & Google Gemini 1.5 Flash")
 
-# Khởi tạo session state nếu chưa có
+# Initialize session state if not already present
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "agent_execution_log" not in st.session_state:
@@ -27,16 +27,16 @@ if "agent_execution_log" not in st.session_state:
 
 def get_response(user_query: str) -> str:
     """
-    Thực thi workflow đa tác tử và stream kết quả.
-    Ghi log các bước trung gian vào st.session_state.agent_execution_log.
-    Trả về phản hồi cuối cùng dưới dạng chuỗi.
+    Execute the multi-agent workflow and stream results.
+    Log intermediate steps to st.session_state.agent_execution_log.
+    Return the final aggregated response as a string.
     """
-    st.session_state.agent_execution_log = []  # Đặt lại log cho mỗi truy vấn mới
+    st.session_state.agent_execution_log = []  # Reset the log for each new query
     
-    # Tạo trạng thái ban đầu cho workflow. Quan trọng là phải là một dict mới mỗi lần.
+    # Create the initial state for the workflow. It's important to use a new dict each time.
     inputs = {
         "input": user_query,
-        "chat_history": [],  # Truyền chat_history rỗng vì AgentState có Annotated[List[BaseMessage], operator.add]
+        "chat_history": [],  # Pass an empty chat_history (AgentState uses Annotated[List[BaseMessage], operator.add])
         "customer_info_result": "",
         "lead_info_result": "",
         "kb_info_result": "",
@@ -47,40 +47,40 @@ def get_response(user_query: str) -> str:
         "intermediate_steps": [],
         "is_recommendation_flow": False,
         "error_message": "",
-        "router_decision": ""  # Khởi tạo router_decision
+        "router_decision": ""  # Initialize router_decision
     }
     
     full_response = ""
-    last_state = None  # Thêm biến để lưu state cuối cùng
-    start_time = time.time()  # Bắt đầu tính thời gian phản hồi
+    last_state = None  # Variable to store the last state seen
+    start_time = time.time()  # Start response time measurement
     
     try:
-        # Stream các bước thực thi để theo dõi
+        # Stream execution updates so we can monitor node-level progress
         for s in app.stream(inputs, stream_mode="updates"):
-            # stream_mode="updates" trả về dict với key là tên node và value là state updates
+            # stream_mode="updates" yields a dict with node name keys and state update values
             for key, value in s.items():
-                # Lưu state cuối cùng từ mỗi update
+                # Keep the last state from each update
                 if isinstance(value, dict):
                     if last_state is None:
                         last_state = value.copy()
                     else:
                         last_state.update(value)
                 
-                # Ghi log cho router node
+                # Log for the router node
                 if key == "router_node":
                     router_decision = value.get("router_decision") 
                     if router_decision:
                         st.session_state.agent_execution_log.append(f"🔄 **Orchestrator Routing:** Decided to use `{router_decision}`")
                 
-                # Ghi log cho flag khuyến nghị
+                # Log when the recommendation flag node runs
                 elif key == "set_recommendation_flag":
                     st.session_state.agent_execution_log.append(f"🚩 **Orchestrator Flag:** `is_recommendation_flow` set to `True`.")
                 
-                # Ghi log cho các agent và node khác
+                # Log for agent nodes and other nodes
                 elif key.endswith("_agent_node") or key == "run_recommendation_node" or key == "prepare_kb_query_for_recommendation":
                     agent_name = key.replace("_agent_node", "").replace("run_", "").replace("_", " ").title().replace("Prep", " Prep")
 
-                    # Ghi log các bước trung gian của agent (React agent)
+                    # Log intermediate steps from the agent (ReAct agent)
                     if value.get("intermediate_steps"):
                         for action, observation in value["intermediate_steps"]:
                             st.session_state.agent_execution_log.append(f"➡️ **{agent_name} Action:** `{action.tool}({action.tool_input})`")
@@ -89,7 +89,7 @@ def get_response(user_query: str) -> str:
                                 display_observation = display_observation[:97] + "..."
                             st.session_state.agent_execution_log.append(f"✅ **{agent_name} Observation:** `{display_observation}`")
                     
-                    # Ghi log kết quả đặc trưng của từng agent
+                    # Log characteristic results returned by each agent
                     if value.get("customer_info_result"):
                          st.session_state.agent_execution_log.append(f"📄 **{agent_name} Result:** Customer Info: {value['customer_info_result'].splitlines()[0]}...")
                          if value.get("customer_profile"):
@@ -105,16 +105,16 @@ def get_response(user_query: str) -> str:
                     elif key == "prepare_kb_query_for_recommendation":
                          st.session_state.agent_execution_log.append(f"📦 **{agent_name}:** Preparing KB query for recommendation.")
 
-                # Ghi log khi response cuối cùng được finalize
+                # Log when the final response node finalizes an answer
                 elif key == "final_response_node":
                     if value.get("final_response"):
                         st.session_state.agent_execution_log.append(f"✨ **Orchestrator: Finalizing Response**")
                 
-                # Kiểm tra lỗi từ bất kỳ node nào
+                # Check for errors produced by any node
                 if value.get("error_message"): 
                     st.session_state.agent_execution_log.append(f"❌ **Error from {key}:** {value['error_message']}")
         
-        # Lấy final_response từ state cuối cùng
+        # Get the final_response from the last state
         if last_state:
             full_response = last_state.get('final_response', "No final response generated.")
             if last_state.get('error_message') and not full_response:
@@ -125,7 +125,7 @@ def get_response(user_query: str) -> str:
             full_response = "No response was generated. Please try again."
             
     except Exception as e:
-        # Xử lý các lỗi nghiêm trọng xảy ra ngoài các node cụ thể
+        # Handle critical workflow-level errors that occurred outside node-specific handlers
         full_response = f"An unexpected workflow error occurred: {e}. Please check the logs or try rephrasing your query."
         st.session_state.agent_execution_log.append(f"❌ **Critical Workflow Error**: {e}")
     
@@ -137,11 +137,11 @@ def get_response(user_query: str) -> str:
 
 
 # --- Streamlit UI Layout ---
-# Chia layout thành hai cột: chat và log
+# Split layout into two columns: chat and log
 col1, col2 = st.columns([0.7, 0.3])
 
 with col1:
-    # Hiển thị lịch sử chat
+    # Display chat history
     for message in st.session_state.chat_history:
         if isinstance(message, HumanMessage):
             with st.chat_message("user"):
@@ -150,41 +150,41 @@ with col1:
             with st.chat_message("assistant"):
                 st.markdown(message.content)
 
-    # Ô nhập liệu cho người dùng.
-    # st.chat_input trả về giá trị khi user nhấn Enter
+    # User input box.
+    # st.chat_input returns a value when the user presses Enter
     user_query = st.chat_input("Ask about customers, leads, or insurance policies...")
     
-    # Xử lý input nếu có
+    # Process input when present
     if user_query:
-        # Thêm tin nhắn của người dùng vào lịch sử chat
+        # Add the user's message to chat history
         st.session_state.chat_history.append(HumanMessage(content=user_query))
         
-        # Xử lý truy vấn và lấy phản hồi AI
+        # Execute the workflow and get an AI response
         with st.spinner("Processing your request..."):
             ai_response = get_response(user_query)
         
-        # Thêm phản hồi AI vào lịch sử chat
+        # Add the AI's response to the chat history
         st.session_state.chat_history.append(AIMessage(content=ai_response))
         
-        # Rerun để cập nhật UI và clear input
+        # Rerun to update the UI and clear the input box
         st.rerun()
 
 
 with col2:
     st.header("🔍 Agent Execution Log")
-    # Hiển thị log ngược lại để các log mới nhất nằm trên cùng
+    # Display logs in reverse order so the newest entries appear at the top
     if st.session_state.agent_execution_log:
         for log_entry in reversed(st.session_state.agent_execution_log): 
             st.markdown(log_entry)
     else:
         st.info("No agent activity yet. Ask a question to see the execution flow!")
     
-    # Nút xóa log
+    # Clear log button
     if st.button("🗑️ Clear Log", key="clear_log_button"):
         st.session_state.agent_execution_log = []
         st.rerun()
 
-# --- Thanh sidebar với các câu truy vấn ví dụ ---
+# --- Sidebar with example queries ---
 st.sidebar.header("📝 Example Queries")
 example_queries = {
     "Customer Queries": [
@@ -221,16 +221,16 @@ for category, queries in example_queries.items():
     st.sidebar.subheader(category)
     for query in queries:
         if st.sidebar.button(query, key=f"sidebar_query_{query}"):
-            # Khi một nút sidebar được nhấn, thêm truy vấn vào lịch sử chat
+            # When a sidebar sample-button is pressed, add the query to chat history
             st.session_state.chat_history.append(HumanMessage(content=query))
             
-            # Xử lý truy vấn và lấy phản hồi AI
+            # Process the query and obtain an AI response
             with st.spinner("Processing..."):
                 ai_response = get_response(query)
             
-            # Thêm phản hồi AI vào lịch sử chat
+            # Add the AI response to chat history
             st.session_state.chat_history.append(AIMessage(content=ai_response))
-            st.rerun()  # Gọi rerun để cập nhật UI sau khi có phản hồi
+            st.rerun()  # Trigger a rerun to refresh the UI after the response
 
 st.sidebar.markdown("---")
 if st.sidebar.button("🗑️ Clear Chat History", key="clear_chat_button"):
