@@ -1,0 +1,87 @@
+[
+  {
+    "id": "CUST001",
+    "name": "John Smith",
+    "email": "john@example.com",
+    "phone": "+1-555-1234",
+    "address": "123 Main St, Anytown, USA",
+    "policies": [
+      {
+        "policy_id": "AUTO-001",
+        "type": "Auto Insurance",
+        "status": "Active",
+        "premium": 1200
+      },
+      {
+        "policy_id": "HOME-001",
+        "type": "Home Insurance",
+        "status": "Active",
+        "premium": 800
+      }
+    ],
+    "history": "Claimed fender bender in 2022. No other incidents."
+  },
+  {
+    "id": "CUST002",
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "phone": "+1-555-5678",
+    "address": "456 Oak Ave, Otherville, USA",
+    "policies": [
+      {
+        "policy_id": "LIFE-001",
+        "type": "Life Insurance",
+        "status": "Active",
+        "premium": 500
+      }
+    ],
+    "history": "Inquired about critical illness insurance in 2023."
+  },
+  {
+    "id": "CUST003",
+    "name": "Robert Johnson",
+    "email": "robert@example.com",
+    "phone": "+1-555-9012",
+    "address": "789 Pine Ln, Anycity, USA",
+    "policies": [
+      {
+        "policy_id": "AUTO-002",
+        "type": "Auto Insurance",
+        "status": "Expired",
+        "premium": 900
+      }
+    ],
+    "history": "No active policies. Previous auto policy expired 6 months ago."
+  },
+  {
+    "id": "CUST004",
+    "name": "Alice Williams",
+    "email": "alice@example.com",
+    "phone": "+1-555-3456",
+    "address": "101 Elm St, Smalltown, USA",
+    "policies": [
+      {
+        "policy_id": "HEALTH-001",
+        "type": "Health Insurance",
+        "status": "Active",
+        "premium": 300
+      },
+      {
+        "policy_id": "HOME-002",
+        "type": "Home Insurance",
+        "status": "Active",
+        "premium": 750
+      }
+    ],
+    "history": "New customer since 2023. No claims yet."
+  },
+  {
+    "id": "CUST005",
+    "name": "Emily Brown",
+    "email": "emily@example.com",
+    "phone": "+1-555-7890",
+    "address": "222 Birch Rd, Bigcity, USA",
+    "policies": [],
+    "history": "Inquired about pet insurance but did not purchase."
+  }
+]

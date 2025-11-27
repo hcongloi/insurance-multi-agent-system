@@ -1,0 +1,28 @@
+# Ignore docs (user requested)
+docs/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment
+.venv/
+venv/
+
+# Chroma DB and other built artifacts
+vectorstore/
+
+# Environment files
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Streamlit cache
+.streamlit/
+
+# IDE / Editor
+.vscode/
+.idea/

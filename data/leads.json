@@ -1,0 +1,57 @@
+[
+  {
+    "id": "LEAD001",
+    "name": "Sarah Connor",
+    "email": "sarah.connor@example.com",
+    "phone": "+1-555-0011",
+    "source": "Website Form",
+    "interest": "Auto Insurance, Home Insurance",
+    "area": "California",
+    "score": 85,
+    "status": "New"
+  },
+  {
+    "id": "LEAD002",
+    "name": "Kyle Reese",
+    "email": "kyle.reese@example.com",
+    "phone": "+1-555-0022",
+    "source": "Referral",
+    "interest": "Life Insurance",
+    "area": "Texas",
+    "score": 92,
+    "status": "Qualified"
+  },
+  {
+    "id": "LEAD003",
+    "name": "T-800",
+    "email": "t800@skynet.com",
+    "phone": "+1-555-0033",
+    "source": "Cold Call",
+    "interest": "Cyber Security Insurance",
+    "area": "New York",
+    "score": 60,
+    "status": "Contacted"
+  },
+  {
+    "id": "LEAD004",
+    "name": "John Smith",
+    "email": "john.doe@test.com",
+    "phone": "+1-555-0044",
+    "source": "Website Form",
+    "interest": "Health Insurance",
+    "area": "California",
+    "score": 78,
+    "status": "New"
+  },
+  {
+    "id": "LEAD005",
+    "name": "Lisa Smith",
+    "email": "lisa.smith@web.com",
+    "phone": "+1-555-0055",
+    "source": "Partnership",
+    "interest": "Travel Insurance",
+    "area": "Florida",
+    "score": 90,
+    "status": "Qualified"
+  }
+]

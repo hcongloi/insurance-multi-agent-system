@@ -1,0 +1,9 @@
+langchain==1.0.5
+langchain-google-genai
+langchain-community
+langchain-core
+langgraph
+python-dotenv
+streamlit
+chromadb
+pypdf
